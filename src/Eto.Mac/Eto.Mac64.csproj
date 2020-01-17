@@ -1,11 +1,13 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net45</TargetFramework>
+    <TargetFrameworks>net45;netstandard2.0</TargetFrameworks>
     <RootNamespace>Eto.Mac</RootNamespace>
     <DefineConstants>$(DefineConstants);OSX;DESKTOP;MONOMAC;Mac64</DefineConstants>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <DefaultItemExcludes>build\*</DefaultItemExcludes>
+    <TargetsForTfmSpecificBuildOutput>$(TargetsForTfmSpecificBuildOutput);CopyProjectReferencesToPackage</TargetsForTfmSpecificBuildOutput>
+
   </PropertyGroup>
   <PropertyGroup>
     <PackageId>Eto.Platform.Mac64</PackageId>
@@ -15,18 +17,17 @@
     <PackageDescription>
 This is the 64-bit MonoMac platform for Eto.Forms UI Framework.
       
-Eto.Platform.Mac64 uses a modified version of the open source MonoMac for 64-bit, which allows you to create macOS application bundles from any platform.  However, it does require mono to be installed when running on macOS.
+Eto.Platform.Mac64 uses a modified version of the open source MonoMac for 64-bit, which allows you to create macOS application bundles from any platform.
       
-Use Eto.Platform.XamMac2 if you want to bundle mono inside your .app, however it requires Visual Studio on a Mac.
+This package creates an .app bundle to run your app on macOS, even on Windows or Linux.
       
-You can create your own .app bundle to run your app on OS X, without an OS X machine. This is included as the MyApp.app folder. Read MyApp.app\Contents\MonoBundle\README.txt for instructions on next steps.
-      
+By default, the mono or .NET Core runtime will be bundled in Release configuration so your app won't require extra dependencies. To bundle mono, it must be installed on the development machine.
+
+Use Eto.Platform.XamMac2 if you want to distribute your app to the Mac App Store, though it requires VS for Mac.
+
 You do not need to use any of the classes of this assembly (unless customizing the MonoMac functionality of the platform), and should just use the UI controls from the Eto assembly.
     </PackageDescription>
   </PropertyGroup>
-  <ItemGroup>
-    <Reference Include="..\..\lib\MonoMac64\MonoMac.dll" />
-  </ItemGroup>
   <ItemGroup>
     <Compile Include="..\Shared\PlatformDetect.cs">
       <Link>PlatformDetect.cs</Link>
@@ -47,18 +48,24 @@ You do not need to use any of the classes of this assembly (unless customizing t
   
   <ItemGroup>
     <ProjectReference Include="..\Eto\Eto.csproj" />
+    <ProjectReference Include="..\..\lib\monomac\src\MonoMac.csproj" PrivateAssets="all" Pack="True" />
   </ItemGroup>
   
   <ItemGroup>
-    <Content Include="..\..\lib\MonoMac64\MonoMac-License.txt" Pack="True" PackagePath="MonoMac-License.txt" PackageCopyToOutput="False">
-      <Link>MonoMac-License.txt</Link>
+    <Content Include="..\..\lib\monomac\LICENSE.txt" Pack="True" PackagePath="MonoMac-LICENSE.txt" PackageCopyToOutput="False">
+      <Link>MonoMac-LICENSE.txt</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <None Include="..\..\lib\MonoMac64\MonoMac.dll" Pack="True" PackagePath="lib\net45" />
     <None Include="build\*" Exclude="build\Mac.*" Pack="True" PackagePath="build" />
     <None Include="build\Mac.targets" Pack="True" PackagePath="build\$(PackageId).targets" />
     <None Include="build\Mac.props" Pack="True" PackagePath="build\$(PackageId).props" />
     
     <None Include="..\..\build\MSBuildTaskHelper.props" Pack="True" PackagePath="build" />
   </ItemGroup>
+  
+  <Target Name="CopyProjectReferencesToPackage" DependsOnTargets="ResolveReferences">
+    <ItemGroup>
+      <BuildOutputInPackage Include="@(ReferenceCopyLocalPaths-&gt;WithMetadataValue('ReferenceSourceTarget', 'ProjectReference')-&gt;WithMetadataValue('Pack', 'True'))" />
+    </ItemGroup>
+  </Target>
 </Project>
