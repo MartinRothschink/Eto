@@ -358,6 +358,8 @@ namespace Eto.Wpf
 
 		public static Bitmap ToEto(this swmi.BitmapSource bitmap)
 		{
+			if (bitmap == null)
+				return null;
 			return new Bitmap(new BitmapHandler(bitmap));
 		}
 
@@ -520,6 +522,8 @@ namespace Eto.Wpf
 					return WindowStyle.None;
 				case sw.WindowStyle.ThreeDBorderWindow:
 					return WindowStyle.Default;
+				case sw.WindowStyle.ToolWindow:
+					return WindowStyle.Utility;
 				default:
 					throw new NotSupportedException();
 			}
@@ -533,6 +537,8 @@ namespace Eto.Wpf
 					return sw.WindowStyle.None;
 				case WindowStyle.Default:
 					return sw.WindowStyle.ThreeDBorderWindow;
+				case WindowStyle.Utility:
+					return sw.WindowStyle.ToolWindow;
 				default:
 					throw new NotSupportedException();
 			}
@@ -913,5 +919,14 @@ namespace Eto.Wpf
 		}
 
 		public static swi.Cursor ToWpf(this Cursor cursor) => cursor?.ControlObject as swi.Cursor;
+
+		public static bool HasAlpha(this swm.PixelFormat format)
+		{
+			return format == swm.PixelFormats.Pbgra32
+				|| format == swm.PixelFormats.Prgba128Float
+				|| format == swm.PixelFormats.Prgba64
+				|| format == swm.PixelFormats.Rgba64
+				|| format == swm.PixelFormats.Rgba64;
+		}
 	}
 }

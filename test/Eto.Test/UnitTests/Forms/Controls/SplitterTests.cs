@@ -9,8 +9,8 @@ namespace Eto.Test.UnitTests.Forms.Controls
 	[TestFixture]
 	public class SplitterTests : TestBase
 	{
-		// currently not working on Gtk due to deferred size allocation
-		bool ReplayTests { get { return !Platform.Instance.IsGtk; } }
+		// currently not working on Gtk or WPF due to deferred size allocation
+		bool ReplayTests => !Platform.Instance.IsGtk && !Platform.Instance.IsWpf;
 
 		static IEnumerable SplitterCases
 		{
@@ -22,7 +22,7 @@ namespace Eto.Test.UnitTests.Forms.Controls
 			}
 		}
 
-		[Test, TestCaseSource("SplitterCases")]
+		[Test, TestCaseSource(nameof(SplitterCases))]
 		public void PositionShouldNotChange(Orientation orient, SplitterFixedPanel fix)
 		{
 			bool replay = false;
@@ -50,7 +50,7 @@ namespace Eto.Test.UnitTests.Forms.Controls
 				}, replay: ReplayTests);
 		}
 
-		[Test, TestCaseSource("SplitterCases")]
+		[Test, TestCaseSource(nameof(SplitterCases))]
 		public void RelativePositionShouldNotChange(Orientation orient, SplitterFixedPanel fix)
 		{
 			bool replay = false;
@@ -80,7 +80,7 @@ namespace Eto.Test.UnitTests.Forms.Controls
 				replay: ReplayTests);
 		}
 
-		[Test, TestCaseSource("SplitterCases")]
+		[Test, TestCaseSource(nameof(SplitterCases))]
 		public void NoPositionShouldAutoSizeBasic(Orientation orient, SplitterFixedPanel fix)
 		{
 			bool replay = false;
@@ -142,7 +142,7 @@ namespace Eto.Test.UnitTests.Forms.Controls
 				replay: ReplayTests);
 		}
 
-		[Test, TestCaseSource("SplitterCases")]
+		[Test, TestCaseSource(nameof(SplitterCases))]
 		public void NoPositionShouldAutoSizeComplexTest1(Orientation orient, SplitterFixedPanel fix)
 		{
 			bool replay = false;
@@ -197,7 +197,7 @@ namespace Eto.Test.UnitTests.Forms.Controls
 				}, replay: ReplayTests);
 		}
 
-		[Test, TestCaseSource("SplitterCases")]
+		[Test, TestCaseSource(nameof(SplitterCases))]
 		public void NoPositionShouldAutoSizeComplexTest2(Orientation orient, SplitterFixedPanel fix)
 		{
 			Shown(
@@ -248,7 +248,7 @@ namespace Eto.Test.UnitTests.Forms.Controls
 				}, replay: ReplayTests);
 		}
 
-		[Test, TestCaseSource("SplitterCases")]
+		[Test, TestCaseSource(nameof(SplitterCases))]
 		// Issue #309
 		public void PositionShouldTrackInitialResize(Orientation orient, SplitterFixedPanel fix)
 		{
@@ -373,6 +373,31 @@ namespace Eto.Test.UnitTests.Forms.Controls
 				};
 			}, -1);
 			Assert.IsTrue(success, message);
+		}
+
+		[Test, ManualTest]
+		public void SplitterInTabControlShouldKeepPosition()
+		{
+			ManualForm("Move the splitter then switch tabs and then back again. The splitter should be at the same position as you left it", form =>
+			{
+				var splitter = new Splitter
+				{
+					FixedPanel = SplitterFixedPanel.Panel1,
+					Orientation = Orientation.Vertical,
+					Panel1 = new Panel { Content = "Panel1" },
+					Panel2 = new Panel { Content = "Panel2" }
+				};
+				var tabs = new TabControl
+				{
+					Size = new Size(300, 300),
+					Pages =
+					{
+						new TabPage { Text = "Tab with splitter", Content = splitter },
+						new TabPage { Text = "Tab 2", Content = "Some content" }
+					}
+				};
+				return tabs;
+			});
 		}
 	}
 }

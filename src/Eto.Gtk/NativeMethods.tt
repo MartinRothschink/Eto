@@ -66,15 +66,25 @@ var gtkmethods = new[]
     "bool gtk_print_unix_dialog_get_embed_page_setup(IntPtr raw)",
     "void gtk_print_unix_dialog_set_embed_page_setup(IntPtr raw, bool embed)",
     "IntPtr gtk_grid_get_child_at(IntPtr raw, int left, int top)",
-    "IntPtr gtk_button_get_event_window(IntPtr button)"
+    "IntPtr gtk_button_get_event_window(IntPtr button)",
+    "uint gtk_get_major_version()",
+    "uint gtk_get_minor_version()",
+    "uint gtk_get_micro_version()"
 };
 
 var gdkmethods = new[]
 {
-	"bool gdk_cairo_get_clip_rectangle(IntPtr context, IntPtr rect)"
+	"bool gdk_cairo_get_clip_rectangle(IntPtr context, IntPtr rect)",
+    "IntPtr gdk_get_default_root_window()",
+    "IntPtr gdk_pixbuf_get_from_window(IntPtr window, int x, int y, int width, int height)",
 };
 
-var methods = giomethods.Concat(gtkmethods).Concat(webkitmethods).Concat(gdkmethods).ToArray();
+var pangomethods = new[]
+{
+	"bool pango_font_has_char(IntPtr font, int wc)"
+};
+
+var methods = giomethods.Concat(gtkmethods).Concat(webkitmethods).Concat(gdkmethods).Concat(pangomethods).ToArray();
 
 #>
 using System;
@@ -108,6 +118,7 @@ namespace Eto.GtkSharp
 			const string libgobject = "libgobject-2.0" + ext;
 			const string libgtk = "libgtk-" + plat + ver + ext;
 			const string libgdk = "libgdk-" + plat + ver + ext;
+			const string libpango = "libpango-" + plat + ver + ext;
 			const string libwebkit = "libwebkit2gtk-4.0.so.37";
 <#
 		foreach (var method in giomethods)
@@ -145,6 +156,16 @@ namespace Eto.GtkSharp
 #>
 
 			[DllImport(libgdk, CallingConvention = CallingConvention.Cdecl)]
+			public extern static <#= method.StartsWith("string") ? "IntPtr" + method.Substring(6) : method #>;
+<#
+		}
+#>
+<#
+		foreach (var method in pangomethods)
+		{
+#>
+
+			[DllImport(libpango, CallingConvention = CallingConvention.Cdecl)]
 			public extern static <#= method.StartsWith("string") ? "IntPtr" + method.Substring(6) : method #>;
 <#
 		}

@@ -374,25 +374,6 @@ namespace Eto.WinForms.Forms
 			}
 		}
 
-		public void AddToolbar(Eto.Forms.ToolBar toolBar)
-		{
-			Control.Controls.Add((swf.Control)toolBar.ControlObject);
-		}
-
-		public void RemoveToolbar(Eto.Forms.ToolBar toolBar)
-		{
-			Control.Controls.Remove((swf.Control)toolBar.ControlObject);
-		}
-
-		public void ClearToolbars()
-		{
-			foreach (swf.Control c in Control.Controls)
-			{
-				if (c is swf.ToolBar)
-					Control.Controls.Remove(c);
-			}
-		}
-
 		public void Close()
 		{
 			Control.Close();
@@ -516,14 +497,14 @@ namespace Eto.WinForms.Forms
 
 		public override bool Visible
 		{
-			get { return base.Visible; }
+			get { return Control.Visible; }
 			set
 			{
-				if (Visible != value)
+				//if (Visible != value)
 				{
-					base.Visible = value;
-					if (Widget.Loaded && value)
-						Callback.OnShown(Widget, EventArgs.Empty);
+					Control.Visible = value;
+				//	if (Widget.Loaded && value)
+				//		Callback.OnShown(Widget, EventArgs.Empty);
 				}
 			}
 		}

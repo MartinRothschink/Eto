@@ -708,9 +708,12 @@ namespace Eto.GtkSharp.Forms
 			[GLib.ConnectBefore]
 			public virtual void HandleDragDataGet(object o, Gtk.DragDataGetArgs args)
 			{
-				var data = Handler?.DragInfo.Data.Handler as DataObjectHandler;
-				data?.Apply(args.SelectionData);
-				args.RetVal = true;
+				var data = Handler?.DragInfo?.Data.Handler as DataObjectHandler;
+				if (data != null)
+				{
+					data.Apply(args.SelectionData);
+					args.RetVal = true;
+				}
 			}
 
 			[GLib.ConnectBefore]
@@ -771,8 +774,14 @@ namespace Eto.GtkSharp.Forms
 
 		public virtual Font Font
 		{
-			get { return Widget.Properties.Get<Font>(GtkControl.Font_Key, () => new Font(new FontHandler(FontControl))); }
-			set { Widget.Properties.Set(GtkControl.Font_Key, value, () => FontControl.SetFont(value.ToPango())); }
+			get => Widget.Properties.Get<Font>(GtkControl.Font_Key) ?? Widget.Properties.Get(GtkControl.Font_Key, FontControl.GetFont().ToEto());
+			set
+			{
+				if (Widget.Properties.TrySet(GtkControl.Font_Key, value))
+				{
+					FontControl.SetFont(value.ToPango());
+				}
+			}
 		}
 
 		public Cursor Cursor
@@ -894,7 +903,7 @@ namespace Eto.GtkSharp.Forms
 			if (image != null)
 				Gtk.Drag.SetIconPixbuf(context, image.ToGdk(), (int)cursorOffset.X, (int)cursorOffset.Y);
 
-			}
+		}
 
 		public Window GetNativeParentWindow() => (Control.Toplevel as Gtk.Window).ToEtoWindow();
 

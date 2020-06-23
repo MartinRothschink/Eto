@@ -29,6 +29,25 @@ namespace Eto.Forms
 	}
 
 	/// <summary>
+	/// Mode for when prompt characters are shown in a control.
+	/// </summary>
+	public enum ShowPromptMode
+	{
+		/// <summary>
+		/// Always show the prompt characters.
+		/// </summary>
+		Always,
+		/// <summary>
+		/// Only show the prompt characters when the control has focus.
+		/// </summary>
+		OnFocus,
+		/// <summary>
+		/// Never show the prompt characters
+		/// </summary>
+		Never
+	}
+
+	/// <summary>
 	/// Masked text box with a variable length numeric mask.
 	/// </summary>
 	/// <remarks>
@@ -74,11 +93,38 @@ namespace Eto.Forms
 		}
 
 		/// <summary>
+		/// Gets or sets the culture for the <see cref="NumericMaskedTextProvider.DecimalCharacter"/> and <see cref="NumericMaskedTextProvider.SignCharacters"/> formatting characters.
+		/// </summary>
+		public CultureInfo Culture
+		{
+			get => Provider.Culture;
+			set
+			{
+				Provider.Culture = value;
+				UpdateText();
+			}
+		}
+
+		/// <summary>
 		/// Initializes a new instance of the <see cref="Eto.Forms.NumericMaskedTextBox{T}"/> class.
 		/// </summary>
 		public NumericMaskedTextBox()
 			: base(new NumericMaskedTextProvider<T>())
 		{
+		}
+
+		/// <inheritdoc/>
+		protected override void OnKeyDown(KeyEventArgs e)
+		{
+			base.OnKeyDown(e);
+			if (e.KeyData == Keys.Decimal)
+			{
+				var pos = CaretIndex;
+				Provider.Insert(Provider.DecimalCharacter, ref pos);
+				UpdateText();
+				CaretIndex = pos;
+				e.Handled = true;
+			}
 		}
 	}
 
@@ -167,13 +213,17 @@ namespace Eto.Forms
 	/// <remarks>
 	/// This uses the <see cref="IMaskedTextProvider"/> as its interface to the mask.  
 	/// The mask can implement any format it wishes, including both fixed or variable length masks.
+	/// The MaskedTextBox allows you to mask, or limit which characters can be entered in the text box with either a fixed, variable, or custom mask.
+	/// A fixed mask can be a phone number, postal code, or something that requires a specific format and can be created using the <see cref="FixedMaskedTextProvider"/>. 
+	/// A variable mask limits which characters can be entered but is not limited to a fixed number of characters.
+	/// An implementation of a variable mask is the <see cref="NumericMaskedTextBox{T}"/> which allows you to enter only numeric values in a text box, and places the positive / negative symbol at the beginning regardless of where you type it.
 	/// </remarks>
 	[ContentProperty("Provider")]
 	public class MaskedTextBox : TextBox
 	{
 		IMaskedTextProvider provider;
 		static readonly object InsertKeyModeKey = new object();
-		static readonly object ShowPromptOnFocusKey = new object();
+		static readonly object ShowPromptModeKey = new object();
 		static readonly object SupportsInsertKey = new object();
 		static readonly object OverwriteModeKey = new object();
 		static readonly object ShowPlaceholderWhenEmptyKey = new object();
@@ -250,14 +300,23 @@ namespace Eto.Forms
 		/// Gets or sets a value indicating that the prompt characters should only be shown when the control has focus.
 		/// </summary>
 		/// <value><c>true</c> if to show the prompt only when focussed; otherwise, <c>false</c>.</value>
+		[Obsolete("Since 2.5.1, Use ShowPromptMode instead")]
 		public bool ShowPromptOnFocus
 		{
-			get { return Properties.Get<bool>(ShowPromptOnFocusKey); }
+			get => ShowPromptMode == ShowPromptMode.OnFocus;
+			set => ShowPromptMode = value ? ShowPromptMode.OnFocus : ShowPromptMode.Always;
+		}
+
+		/// <summary>
+		/// Gets or sets the mode for when the input prompts should be shown
+		/// </summary>
+		public ShowPromptMode ShowPromptMode
+		{
+			get => Properties.Get<ShowPromptMode>(ShowPromptModeKey);
 			set
 			{ 
-				if (ShowPromptOnFocus != value)
+				if (Properties.TrySet(ShowPromptModeKey, value))
 				{
-					Properties[ShowPromptOnFocusKey] = value;
 					UpdateText();
 				}
 			}
@@ -331,7 +390,7 @@ namespace Eto.Forms
 			var hasFocus = HasFocus;
 			if (!hasFocus && ShowPlaceholderWhenEmpty && provider.IsEmpty && !string.IsNullOrEmpty(PlaceholderText))
 				base.Text = null;
-			else if (hasFocus || !ShowPromptOnFocus)
+			else if ((hasFocus && ShowPromptMode == ShowPromptMode.OnFocus) || ShowPromptMode == ShowPromptMode.Always)
 				base.Text = provider.DisplayText;
 			else
 				base.Text = provider.Text;
@@ -355,7 +414,7 @@ namespace Eto.Forms
 		protected override void OnGotFocus(EventArgs e)
 		{
 			base.OnGotFocus(e);
-			if (ShowPromptOnFocus || ShowPlaceholderWhenEmpty)
+			if (ShowPromptMode == ShowPromptMode.OnFocus || ShowPlaceholderWhenEmpty)
 				UpdateText();
 		}
 
@@ -366,7 +425,7 @@ namespace Eto.Forms
 		protected override void OnLostFocus(EventArgs e)
 		{
 			base.OnLostFocus(e);
-			if (ShowPromptOnFocus || ShowPlaceholderWhenEmpty)
+			if (ShowPromptMode == ShowPromptMode.OnFocus || ShowPlaceholderWhenEmpty)
 				UpdateText();
 		}
 

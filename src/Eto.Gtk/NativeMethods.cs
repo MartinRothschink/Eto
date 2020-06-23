@@ -26,6 +26,7 @@ namespace Eto.GtkSharp
 			const string libgobject = "libgobject-2.0" + ext;
 			const string libgtk = "libgtk-" + plat + ver + ext;
 			const string libgdk = "libgdk-" + plat + ver + ext;
+			const string libpango = "libpango-" + plat + ver + ext;
 			const string libwebkit = "libwebkit2gtk-4.0.so.37";
 
 			[DllImport(libgobject, CallingConvention = CallingConvention.Cdecl)]
@@ -169,8 +170,26 @@ namespace Eto.GtkSharp
 			[DllImport(libgtk, CallingConvention = CallingConvention.Cdecl)]
 			public extern static IntPtr gtk_button_get_event_window(IntPtr button);
 
+			[DllImport(libgtk, CallingConvention = CallingConvention.Cdecl)]
+			public extern static uint gtk_get_major_version();
+
+			[DllImport(libgtk, CallingConvention = CallingConvention.Cdecl)]
+			public extern static uint gtk_get_minor_version();
+
+			[DllImport(libgtk, CallingConvention = CallingConvention.Cdecl)]
+			public extern static uint gtk_get_micro_version();
+
 			[DllImport(libgdk, CallingConvention = CallingConvention.Cdecl)]
 			public extern static bool gdk_cairo_get_clip_rectangle(IntPtr context, IntPtr rect);
+
+			[DllImport(libgdk, CallingConvention = CallingConvention.Cdecl)]
+			public extern static IntPtr gdk_get_default_root_window();
+
+			[DllImport(libgdk, CallingConvention = CallingConvention.Cdecl)]
+			public extern static IntPtr gdk_pixbuf_get_from_window(IntPtr window, int x, int y, int width, int height);
+
+			[DllImport(libpango, CallingConvention = CallingConvention.Cdecl)]
+			public extern static bool pango_font_has_char(IntPtr font, int wc);
 		}
 
 		static class NMLinux
@@ -184,6 +203,7 @@ namespace Eto.GtkSharp
 			const string libgobject = "libgobject-2.0" + ext;
 			const string libgtk = "libgtk-" + plat + ver + ext;
 			const string libgdk = "libgdk-" + plat + ver + ext;
+			const string libpango = "libpango-" + plat + ver + ext;
 			const string libwebkit = "libwebkit2gtk-4.0.so.37";
 
 			[DllImport(libgobject, CallingConvention = CallingConvention.Cdecl)]
@@ -327,8 +347,26 @@ namespace Eto.GtkSharp
 			[DllImport(libgtk, CallingConvention = CallingConvention.Cdecl)]
 			public extern static IntPtr gtk_button_get_event_window(IntPtr button);
 
+			[DllImport(libgtk, CallingConvention = CallingConvention.Cdecl)]
+			public extern static uint gtk_get_major_version();
+
+			[DllImport(libgtk, CallingConvention = CallingConvention.Cdecl)]
+			public extern static uint gtk_get_minor_version();
+
+			[DllImport(libgtk, CallingConvention = CallingConvention.Cdecl)]
+			public extern static uint gtk_get_micro_version();
+
 			[DllImport(libgdk, CallingConvention = CallingConvention.Cdecl)]
 			public extern static bool gdk_cairo_get_clip_rectangle(IntPtr context, IntPtr rect);
+
+			[DllImport(libgdk, CallingConvention = CallingConvention.Cdecl)]
+			public extern static IntPtr gdk_get_default_root_window();
+
+			[DllImport(libgdk, CallingConvention = CallingConvention.Cdecl)]
+			public extern static IntPtr gdk_pixbuf_get_from_window(IntPtr window, int x, int y, int width, int height);
+
+			[DllImport(libpango, CallingConvention = CallingConvention.Cdecl)]
+			public extern static bool pango_font_has_char(IntPtr font, int wc);
 		}
 
 		static class NMMac
@@ -342,6 +380,7 @@ namespace Eto.GtkSharp
 			const string libgobject = "libgobject-2.0" + ext;
 			const string libgtk = "libgtk-" + plat + ver + ext;
 			const string libgdk = "libgdk-" + plat + ver + ext;
+			const string libpango = "libpango-" + plat + ver + ext;
 			const string libwebkit = "libwebkit2gtk-4.0.so.37";
 
 			[DllImport(libgobject, CallingConvention = CallingConvention.Cdecl)]
@@ -485,8 +524,26 @@ namespace Eto.GtkSharp
 			[DllImport(libgtk, CallingConvention = CallingConvention.Cdecl)]
 			public extern static IntPtr gtk_button_get_event_window(IntPtr button);
 
+			[DllImport(libgtk, CallingConvention = CallingConvention.Cdecl)]
+			public extern static uint gtk_get_major_version();
+
+			[DllImport(libgtk, CallingConvention = CallingConvention.Cdecl)]
+			public extern static uint gtk_get_minor_version();
+
+			[DllImport(libgtk, CallingConvention = CallingConvention.Cdecl)]
+			public extern static uint gtk_get_micro_version();
+
 			[DllImport(libgdk, CallingConvention = CallingConvention.Cdecl)]
 			public extern static bool gdk_cairo_get_clip_rectangle(IntPtr context, IntPtr rect);
+
+			[DllImport(libgdk, CallingConvention = CallingConvention.Cdecl)]
+			public extern static IntPtr gdk_get_default_root_window();
+
+			[DllImport(libgdk, CallingConvention = CallingConvention.Cdecl)]
+			public extern static IntPtr gdk_pixbuf_get_from_window(IntPtr window, int x, int y, int width, int height);
+
+			[DllImport(libpango, CallingConvention = CallingConvention.Cdecl)]
+			public extern static bool pango_font_has_char(IntPtr font, int wc);
 		}
 
 		public static string GetString(IntPtr handle)
@@ -763,6 +820,36 @@ namespace Eto.GtkSharp
 				return NMWindows.gtk_button_get_event_window(button);
 		}
 
+		public static uint gtk_get_major_version()
+		{
+			if (EtoEnvironment.Platform.IsLinux)
+				return NMLinux.gtk_get_major_version();
+			else if (EtoEnvironment.Platform.IsMac)
+				return NMMac.gtk_get_major_version();
+			else
+				return NMWindows.gtk_get_major_version();
+		}
+
+		public static uint gtk_get_minor_version()
+		{
+			if (EtoEnvironment.Platform.IsLinux)
+				return NMLinux.gtk_get_minor_version();
+			else if (EtoEnvironment.Platform.IsMac)
+				return NMMac.gtk_get_minor_version();
+			else
+				return NMWindows.gtk_get_minor_version();
+		}
+
+		public static uint gtk_get_micro_version()
+		{
+			if (EtoEnvironment.Platform.IsLinux)
+				return NMLinux.gtk_get_micro_version();
+			else if (EtoEnvironment.Platform.IsMac)
+				return NMMac.gtk_get_micro_version();
+			else
+				return NMWindows.gtk_get_micro_version();
+		}
+
 		public static IntPtr webkit_web_view_new()
 		{
 			if (EtoEnvironment.Platform.IsLinux)
@@ -981,6 +1068,36 @@ namespace Eto.GtkSharp
 				return NMMac.gdk_cairo_get_clip_rectangle(context, rect);
 			else
 				return NMWindows.gdk_cairo_get_clip_rectangle(context, rect);
+		}
+
+		public static IntPtr gdk_get_default_root_window()
+		{
+			if (EtoEnvironment.Platform.IsLinux)
+				return NMLinux.gdk_get_default_root_window();
+			else if (EtoEnvironment.Platform.IsMac)
+				return NMMac.gdk_get_default_root_window();
+			else
+				return NMWindows.gdk_get_default_root_window();
+		}
+
+		public static IntPtr gdk_pixbuf_get_from_window(IntPtr window, int x, int y, int width, int height)
+		{
+			if (EtoEnvironment.Platform.IsLinux)
+				return NMLinux.gdk_pixbuf_get_from_window(window, x, y, width, height);
+			else if (EtoEnvironment.Platform.IsMac)
+				return NMMac.gdk_pixbuf_get_from_window(window, x, y, width, height);
+			else
+				return NMWindows.gdk_pixbuf_get_from_window(window, x, y, width, height);
+		}
+
+		public static bool pango_font_has_char(IntPtr font, int wc)
+		{
+			if (EtoEnvironment.Platform.IsLinux)
+				return NMLinux.pango_font_has_char(font, wc);
+			else if (EtoEnvironment.Platform.IsMac)
+				return NMMac.pango_font_has_char(font, wc);
+			else
+				return NMWindows.pango_font_has_char(font, wc);
 		}
 	}
 }

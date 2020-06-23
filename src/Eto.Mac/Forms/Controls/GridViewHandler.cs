@@ -56,7 +56,10 @@ namespace Eto.Mac.Forms.Controls
 			/// </summary>
 			public override void DrawBackground(CGRect clipRect)
 			{
-				var backgroundColor = Handler.BackgroundColor;
+				var h = Handler;
+				if (h == null)
+					return;
+				var backgroundColor = h.BackgroundColor;
 				if (backgroundColor != Colors.Transparent)
 				{
 					backgroundColor.ToNSUI().Set();
@@ -85,9 +88,15 @@ namespace Eto.Mac.Forms.Controls
 				if (HandleMouseEvent(theEvent))
 					return;
 
-				Handler.IsMouseDragging = true;
+				var h = Handler;
+				if (h == null)
+				{
+					base.MouseDown(theEvent);
+					return;
+				}
+				h.IsMouseDragging = true;
 				base.MouseDown(theEvent);
-				Handler.IsMouseDragging = true;
+				h.IsMouseDragging = false;
 			}
 
 			bool HandleMouseEvent(NSEvent theEvent)
@@ -360,15 +369,22 @@ namespace Eto.Mac.Forms.Controls
 			NSIndexSet previouslySelected;
 			public override void SelectionDidChange(NSNotification notification)
 			{
-				if (Handler.SuppressSelectionChanged == 0)
+				var h = Handler;
+				if (h == null)
+					return;
+
+				// didn't start a drag (when this was set), so clear this out when the selection changes
+				h.CustomSelectedRows = null;
+
+				if (h.SuppressSelectionChanged == 0)
 				{
-					Handler.Callback.OnSelectionChanged(Handler.Widget, EventArgs.Empty);
-					var columns = NSIndexSet.FromNSRange(new NSRange(0, Handler.Control.TableColumns().Length));
+					h.Callback.OnSelectionChanged(h.Widget, EventArgs.Empty);
+					var columns = NSIndexSet.FromNSRange(new NSRange(0, h.Control.TableColumns().Length));
 					if (previouslySelected?.Count > 0)
-						Handler.Control.ReloadData(previouslySelected, columns);
-					var selected = Handler.Control.SelectedRows;
+						h.Control.ReloadData(previouslySelected, columns);
+					var selected = h.Control.SelectedRows;
 					if (selected?.Count > 0)
-						Handler.Control.ReloadData(selected, columns);
+						h.Control.ReloadData(selected, columns);
 					previouslySelected = selected;
 				}
 			}
