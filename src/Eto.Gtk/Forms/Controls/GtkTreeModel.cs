@@ -6,13 +6,22 @@ using System.Runtime.InteropServices;
 
 namespace Eto.GtkSharp.Forms.Controls
 {
+	public interface IGtkTreeModelHandler<TItem, TStore> : IGtkListModelHandler<TItem>
+	{
+		TStore DataStore { get; }
+	}
+
 	public class GtkTreeModel<TItem, TStore> : GLib.Object, ITreeModelImplementor
 		where TStore: class, IDataStore<TItem>
 		where TItem: class, ITreeItem<TItem>
 	{
 		WeakReference handler;
 
-		public IGtkListModelHandler<TItem, TStore> Handler { get { return (IGtkListModelHandler<TItem, TStore>)handler.Target; } set { handler = new WeakReference(value); } }
+		public IGtkTreeModelHandler<TItem, TStore> Handler
+		{
+			get => (IGtkTreeModelHandler<TItem, TStore>)handler.Target;
+			set => handler = new WeakReference(value);
+		}
 
 		class Node
 		{
@@ -75,13 +84,16 @@ namespace Eto.GtkSharp.Forms.Controls
 
 		IEnumerable<TStore> GetParents(TItem item)
 		{
-			var parent = item.Parent;
-			while (parent != null)
+			TStore store = null;
+			item = item.Parent;
+			while (item != null)
 			{
-				yield return parent as TStore;
-				parent = parent.Parent;
+				store = item as TStore;
+				if (store != null)
+					yield return store;
+				item = item.Parent;
 			}
-			if (!ReferenceEquals(parent, Handler.DataStore))
+			if (!ReferenceEquals(store, Handler.DataStore))
 			{
 				yield return Handler.DataStore;
 			}

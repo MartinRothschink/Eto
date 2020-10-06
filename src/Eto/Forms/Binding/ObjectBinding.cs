@@ -65,6 +65,7 @@ namespace Eto.Forms
 	public class ObjectBinding<T, TValue> : DirectBinding<TValue>
 	{
 		object dataValueChangedReference;
+		bool dataValueChangedHandled;
 		T dataItem;
 
 		/// <summary>
@@ -80,12 +81,12 @@ namespace Eto.Forms
 			get { return dataItem; }
 			set
 			{
-				var updateEvent = dataValueChangedReference != null;
-				if (updateEvent)
+				var hasValueChanged = dataValueChangedHandled;
+				if (hasValueChanged)
 					RemoveEvent(DataValueChangedEvent);
 				dataItem = value;
 				OnDataValueChanged(EventArgs.Empty);
-				if (updateEvent)
+				if (hasValueChanged)
 					HandleEvent(DataValueChangedEvent);
 			}
 		}
@@ -143,18 +144,6 @@ namespace Eto.Forms
 		{
 			this.dataItem = dataItem;
 			InnerBinding = innerBinding;
-			InnerBinding.Changed += HandleInnerBindingChanged;
-			InnerBinding.Changing += HandleInnerBindingChanging;
-		}
-
-		void HandleInnerBindingChanging(object sender, BindingChangingEventArgs e)
-		{
-			OnChanging(e);
-		}
-
-		void HandleInnerBindingChanged(object sender, BindingChangedEventArgs e)
-		{
-			OnChanged(e);
 		}
 
 		/// <summary>
@@ -172,7 +161,12 @@ namespace Eto.Forms
 			}
 			set
 			{
+				var args = new BindingChangingEventArgs(DataValue);
+				OnChanging(args);
+				if (args.Cancel)
+					return;
 				InnerBinding.SetValue(DataItem, Equals(value, default(T)) ? SettingNullValue : value);
+				OnChanged(new BindingChangedEventArgs(DataValue));
 			}
 		}
 
@@ -184,11 +178,14 @@ namespace Eto.Forms
 			switch (id)
 			{
 				case DataValueChangedEvent:
-					if (dataValueChangedReference == null)
+					if (!dataValueChangedHandled)
+					{
 						dataValueChangedReference = InnerBinding.AddValueChangedHandler(
 							DataItem,
 							new EventHandler<EventArgs>(HandleChangedEvent)
 						);
+						dataValueChangedHandled = true;
+					}
 					break;
 				default:
 					base.HandleEvent(id);
@@ -204,13 +201,14 @@ namespace Eto.Forms
 			switch (id)
 			{
 				case DataValueChangedEvent:
-					if (dataValueChangedReference != null)
+					if (dataValueChangedHandled)
 					{
 						InnerBinding.RemoveValueChangedHandler(
 							dataValueChangedReference,
 							new EventHandler<EventArgs>(HandleChangedEvent)
 						);
 						dataValueChangedReference = null;
+						dataValueChangedHandled = false;
 					}
 					break;
 				default:

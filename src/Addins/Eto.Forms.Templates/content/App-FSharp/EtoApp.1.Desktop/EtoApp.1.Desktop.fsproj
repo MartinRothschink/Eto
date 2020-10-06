@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
-    <TargetFrameworks>net461</TargetFrameworks>
+    <TargetFrameworks>net472</TargetFrameworks>
     <AssemblySearchPaths Condition="$(GtkVersion)=='Gtk2' or $(GtkVersion)=='Gtk3'">$(AssemblySearchPaths);{GAC}</AssemblySearchPaths>
   </PropertyGroup>
   
@@ -15,9 +15,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Eto.Platform.Mac64" Version="2.5.1-dev" />
-    <PackageReference Include="Eto.Platform.Wpf" Version="2.5.1-dev" />
-    <PackageReference Include="Eto.Platform.Gtk" Version="2.5.1-dev" />
+    <PackageReference Include="Eto.Platform.Mac64" Version="2.5.6-dev" />
+    <PackageReference Include="Eto.Platform.Wpf" Version="2.5.6-dev" />
+    <PackageReference Include="Eto.Platform.Gtk" Version="2.5.6-dev" />
   </ItemGroup>
 
 

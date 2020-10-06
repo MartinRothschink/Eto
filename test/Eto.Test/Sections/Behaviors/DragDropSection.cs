@@ -11,6 +11,7 @@ namespace Eto.Test.Sections.Behaviors
 	[Section("Behaviors", "Drag and Drop")]
 	public class DragDropSection : Panel
 	{
+		EnumDropDown<DragEffects?> dragEnterEffect;
 		EnumDropDown<DragEffects?> dragOverEffect;
 		CheckBox showDragOverEvents;
 		CheckBox useDragImage;
@@ -30,13 +31,14 @@ namespace Eto.Test.Sections.Behaviors
 			innerTextBox = new TextBox { PlaceholderText = "Inner", ToolTip = "Highlighted text to insert into description" };
 			var textBox = new TextBox { Text = "Some text" };
 			allowedEffectDropDown = new EnumDropDown<DragEffects> { SelectedValue = DragEffects.All };
-			dragOverEffect = new EnumDropDown<DragEffects?> { SelectedValue = DragEffects.Copy };
+			dragEnterEffect = new EnumDropDown<DragEffects?> { SelectedValue = DragEffects.Copy };
+			dragOverEffect = new EnumDropDown<DragEffects?> { SelectedValue = null };
 			writeDataCheckBox = new CheckBox { Text = "Write data to log" };
 			useDragImage = new CheckBox { Text = "Use custom drag image" };
 			imageOffset = new PointEntry { Value = new Point(80, 80) };
 			imageOffset.Bind(c => c.Enabled, useDragImage, c => c.Checked);
 
-			var htmlTextArea = new TextArea();
+			var htmlTextArea = new TextArea { Height = 24 };
 			var selectFilesButton = new Button { Text = "Select Files" };
 			Uri[] fileUris = null;
 			selectFilesButton.Click += (sender, e) =>
@@ -67,6 +69,7 @@ namespace Eto.Test.Sections.Behaviors
 					data.Html = htmlTextArea.Text;
 				if (includeImageCheck.Checked == true)
 					data.Image = TestIcons.Logo;
+
 				return data;
 			}
 
@@ -105,7 +108,7 @@ namespace Eto.Test.Sections.Behaviors
 						return;
 					var data = CreateDataObject();
 					var selected = treeSource.SelectedItems.OfType<TreeGridItem>().Select(r => (string)r.Values[0]);
-					data.SetString(string.Join(";", selected), "my-tree-data");
+					data.SetString(string.Join(";", selected), "my.tree.data");
 
 					DoDragDrop(treeSource, data);
 					e.Handled = true;
@@ -125,7 +128,7 @@ namespace Eto.Test.Sections.Behaviors
 						return;
 					var data = CreateDataObject();
 					var selected = gridSource.SelectedItems.OfType<GridItem>().Select(r => (string)r.Values[0]);
-					data.SetString(string.Join(";", selected), "my-grid-data");
+					data.SetString(string.Join(";", selected), "my.grid.data");
 
 					DoDragDrop(gridSource, data);
 					e.Handled = true;
@@ -245,6 +248,7 @@ namespace Eto.Test.Sections.Behaviors
 			layout.AddRow("DropDescription", descriptionTextBox);
 			layout.AddRow(new Panel(), innerTextBox);
 			layout.EndVertical();
+			layout.AddSeparateRow("DragEnter Effect", dragEnterEffect, null);
 			layout.AddSeparateRow("DragOver Effect", dragOverEffect, null);
 			layout.AddSeparateRow(useDragImage);
 			layout.AddSeparateRow("Image offset:", imageOffset);
@@ -369,7 +373,7 @@ namespace Eto.Test.Sections.Behaviors
 				sb.Append($"\n\tTypes: {string.Join(", ", data.Types)}");
 			var uris = data.Uris;
 			if (uris != null)
-				sb.Append($"\n\tUris: {string.Join(", ", uris.Select(r => r.AbsoluteUri))})");
+				sb.Append($"\n\tUris: {string.Join(", ", uris.Select(r => r.IsFile ? r.LocalPath : r.AbsoluteUri))})");
 			return sb.ToString();
 		}
 
@@ -379,8 +383,8 @@ namespace Eto.Test.Sections.Behaviors
 			{
 				Log.Write(sender, $"DragEnter: {WriteDragInfo(sender, e)}");
 
-				if (dragOverEffect.SelectedValue != null)
-					e.Effects = dragOverEffect.SelectedValue.Value;
+				if (dragEnterEffect.SelectedValue != null)
+					e.Effects = dragEnterEffect.SelectedValue.Value;
 				if (!string.IsNullOrEmpty(descriptionTextBox.Text) && e.SupportsDropDescription)
 					e.SetDropDescription(descriptionTextBox.Text, innerTextBox.Text);
 				WriteData(e.Data);
@@ -388,8 +392,8 @@ namespace Eto.Test.Sections.Behaviors
 			control.DragLeave += (sender, e) =>
 			{
 				Log.Write(sender, $"DragLeave: {WriteDragInfo(sender, e)}");
-				if (dragOverEffect.SelectedValue != null)
-					e.Effects = dragOverEffect.SelectedValue.Value;
+				if (dragEnterEffect.SelectedValue != null)
+					e.Effects = dragEnterEffect.SelectedValue.Value;
 
 				WriteData(e.Data);
 			};

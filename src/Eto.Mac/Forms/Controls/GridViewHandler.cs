@@ -56,7 +56,10 @@ namespace Eto.Mac.Forms.Controls
 			/// </summary>
 			public override void DrawBackground(CGRect clipRect)
 			{
-				var backgroundColor = Handler.BackgroundColor;
+				var h = Handler;
+				if (h == null)
+					return;
+				var backgroundColor = h.BackgroundColor;
 				if (backgroundColor != Colors.Transparent)
 				{
 					backgroundColor.ToNSUI().Set();
@@ -85,9 +88,15 @@ namespace Eto.Mac.Forms.Controls
 				if (HandleMouseEvent(theEvent))
 					return;
 
-				Handler.IsMouseDragging = true;
+				var h = Handler;
+				if (h == null)
+				{
+					base.MouseDown(theEvent);
+					return;
+				}
+				h.IsMouseDragging = true;
 				base.MouseDown(theEvent);
-				Handler.IsMouseDragging = true;
+				h.IsMouseDragging = false;
 			}
 
 			bool HandleMouseEvent(NSEvent theEvent)
@@ -131,12 +140,10 @@ namespace Eto.Mac.Forms.Controls
 				SetDraggingSourceOperationMask(NSDragOperation.All, false);
 			}
 
-			internal GridDragInfo DragInfo { get; set; }
-
 			[Export("draggingSession:sourceOperationMaskForDraggingContext:")]
 			public NSDragOperation DraggingSessionSourceOperationMask(NSDraggingSession session, IntPtr context)
 			{
-				return DragInfo?.AllowedOperation ?? NSDragOperation.None;
+				return Handler?.DragInfo?.AllowedOperation ?? NSDragOperation.None;
 			}
 
 			public override void Layout()
@@ -152,6 +159,13 @@ namespace Eto.Mac.Forms.Controls
 #if XAMMAC2
 			public override NSImage DragImageForRowsWithIndexestableColumnseventoffset(NSIndexSet dragRows, NSTableColumn[] tableColumns, NSEvent dragEvent, ref CGPoint dragImageOffset)
 			{
+				var dragInfo = Handler?.DragInfo;
+				var img = dragInfo?.DragImage;
+				if (img != null)
+				{
+					dragImageOffset = dragInfo.GetDragImageOffset();
+					return img;
+				}
 				return base.DragImageForRowsWithIndexestableColumnseventoffset(dragRows, tableColumns, dragEvent, ref dragImageOffset);
 			}
 #else
@@ -161,10 +175,11 @@ namespace Eto.Mac.Forms.Controls
 			[Export("dragImageForRowsWithIndexes:tableColumns:event:offset:")]
 			public NSImage DragImageForRows(NSIndexSet dragRows, NSTableColumn[] tableColumns, NSEvent dragEvent, ref CGPoint dragImageOffset)
 			{
-				var img = DragInfo?.DragImage;
+				var dragInfo = Handler?.DragInfo;
+				var img = dragInfo?.DragImage;
 				if (img != null)
 				{
-					dragImageOffset = DragInfo.GetDragImageOffset();
+					dragImageOffset = dragInfo.GetDragImageOffset();
 					return img;
 				}
 
@@ -301,7 +316,7 @@ namespace Eto.Mac.Forms.Controls
 
 				if (h.IsMouseDragging)
 				{
-					h.Control.DragInfo = null;
+					h.DragInfo = null;
 					// give MouseMove event a chance to start the drag
 					h.DragPasteboard = pboard;
 
@@ -334,7 +349,7 @@ namespace Eto.Mac.Forms.Controls
 					h.Callback.OnMouseMove(h.Widget, args);
 					h.DragPasteboard = null;
 
-					return h.Control.DragInfo != null;
+					return h.DragInfo != null;
 				}
 
 				return false;
@@ -360,15 +375,22 @@ namespace Eto.Mac.Forms.Controls
 			NSIndexSet previouslySelected;
 			public override void SelectionDidChange(NSNotification notification)
 			{
-				if (Handler.SuppressSelectionChanged == 0)
+				var h = Handler;
+				if (h == null)
+					return;
+
+				// didn't start a drag (when this was set), so clear this out when the selection changes
+				h.CustomSelectedRows = null;
+
+				if (h.SuppressSelectionChanged == 0)
 				{
-					Handler.Callback.OnSelectionChanged(Handler.Widget, EventArgs.Empty);
-					var columns = NSIndexSet.FromNSRange(new NSRange(0, Handler.Control.TableColumns().Length));
+					h.Callback.OnSelectionChanged(h.Widget, EventArgs.Empty);
+					var columns = NSIndexSet.FromNSRange(new NSRange(0, h.Control.TableColumns().Length));
 					if (previouslySelected?.Count > 0)
-						Handler.Control.ReloadData(previouslySelected, columns);
-					var selected = Handler.Control.SelectedRows;
+						h.Control.ReloadData(previouslySelected, columns);
+					var selected = h.Control.SelectedRows;
 					if (selected?.Count > 0)
-						Handler.Control.ReloadData(selected, columns);
+						h.Control.ReloadData(selected, columns);
 					previouslySelected = selected;
 				}
 			}
@@ -624,33 +646,6 @@ namespace Eto.Mac.Forms.Controls
 			column = (int)Control.GetColumn(nslocation);
 			row = (int)Control.GetRow(nslocation);
 			return row >= 0 ? GetItem(row) : null;
-		}
-
-		static readonly object DragPasteboard_Key = new object();
-
-		NSPasteboard DragPasteboard
-		{
-			get { return Widget.Properties.Get<NSPasteboard>(DragPasteboard_Key); }
-			set { Widget.Properties.Set(DragPasteboard_Key, value); }
-		}
-
-		public override void DoDragDrop(DataObject data, DragEffects allowedAction, Image image, PointF origin)
-		{
-			if (DragPasteboard != null)
-			{
-				var handler = data.Handler as IDataObjectHandler;
-				handler?.Apply(DragPasteboard);
-				Control.DragInfo = new GridDragInfo
-				{
-					AllowedOperation = allowedAction.ToNS(),
-					DragImage = image.ToNS(),
-					ImageOffset = origin
-				};
-			}
-			else
-			{
-				base.DoDragDrop(data, allowedAction, image, origin);
-			}
 		}
 
 		public GridViewDragInfo GetDragInfo(DragEventArgs args) => args.ControlObject as GridViewDragInfo;

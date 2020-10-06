@@ -9,12 +9,14 @@ using System.Collections.Generic;
 using AppKit;
 using Foundation;
 using ObjCRuntime;
+using MobileCoreServices;
 #else
 using MonoMac.AppKit;
 using MonoMac.Foundation;
 using MonoMac.CoreGraphics;
 using MonoMac.ObjCRuntime;
 using MonoMac.CoreAnimation;
+using MonoMac.MobileCoreServices;
 #if Mac64
 using nfloat = System.Double;
 using nint = System.Int64;
@@ -47,11 +49,7 @@ namespace Eto.Mac.Forms
 		public class StringItem : BaseItem
 		{
 			public string Value { get; set; }
-			public override void Apply(NSPasteboard pasteboard, string type)
-			{
-				//pasteboard.DeclareTypes(new[] { type }, null);
-				pasteboard.SetStringForType(Value, type);
-			}
+			public override void Apply(NSPasteboard pasteboard, string type) => pasteboard.SetStringForType(Value, type);
 			public override void Apply(NSPasteboardItem item, string type) => item.SetStringForType(Value, type);
 		}
 
@@ -94,6 +92,14 @@ namespace Eto.Mac.Forms
 			public override void Apply(NSPasteboardItem item, string type) { }
 			public override IEnumerable<NSObject> GetItems() => GetNSValues();
 		}
+
+		public class ColorItem : BaseItem
+		{
+			public NSColor Value { get; set; }
+			public override void Apply(NSPasteboard pasteboard, string type) => pasteboard.WriteObjects(new[] { Value });
+			public override void Apply(NSPasteboardItem item, string type) { }
+		}
+
 
 		public MemoryDataObjectHandler()
 		{
@@ -200,7 +206,7 @@ namespace Eto.Mac.Forms
 				{
 					if (pasteboardItem == null)
 						pasteboardItem = new NSPasteboardItem();
-					item.Value.Apply(pasteboardItem, item.Key);
+					item.Value?.Apply(pasteboardItem, item.Key);
 				}
 			}
 			if (pasteboardItem != null)
@@ -211,5 +217,30 @@ namespace Eto.Mac.Forms
 
 		public bool Contains(string type) => GetDataItem<DataItem>(type) != null;
 
+		public bool TrySetObject(object value, string type)
+		{
+			if (type == NSPasteboard.NSPasteboardTypeColor && value is Color color)
+			{
+				Control[type] = new ColorItem { Value = color.ToNSUI() };
+				return true;
+			}
+			return false;
+		}
+
+		public bool TryGetObject(string type, out object value)
+		{
+			var colorItem = GetDataItem<ColorItem>(type);
+			if (colorItem != null)
+			{
+				value = colorItem.Value.ToEto();
+				return true;
+			}
+			value = null;
+			return false;
+		}
+
+		public void SetObject(object value, string type) => Widget.SetObject(value, type);
+
+		public T GetObject<T>(string type) => Widget.GetObject<T>(type);
 	}
 }

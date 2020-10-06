@@ -13,12 +13,14 @@ using Foundation;
 using CoreGraphics;
 using ObjCRuntime;
 using CoreAnimation;
+using MobileCoreServices;
 #else
 using MonoMac.AppKit;
 using MonoMac.Foundation;
 using MonoMac.CoreGraphics;
 using MonoMac.ObjCRuntime;
 using MonoMac.CoreAnimation;
+using MonoMac.MobileCoreServices;
 #if Mac64
 using nfloat = System.Double;
 using nint = System.Int64;
@@ -37,6 +39,15 @@ using CGPoint = System.Drawing.PointF;
 
 namespace Eto.Mac.Forms
 {
+	public class DataFormatsHandler : DataFormats.IHandler
+	{
+		public string Text => NSPasteboard.NSPasteboardTypeString;
+
+		public string Html => NSPasteboard.NSPasteboardTypeHTML;
+
+		public string Color => NSPasteboard.NSPasteboardTypeColor;
+	}
+
 	public interface IDataObjectHandler
 	{
 		void Apply(NSPasteboard pasteboard);
@@ -55,7 +66,7 @@ namespace Eto.Mac.Forms
 	}
 
 	public abstract class DataObjectHandler<TWidget, TCallback> : WidgetHandler<NSPasteboard, TWidget, TCallback>, IDataObject
-		where TWidget : Widget
+		where TWidget : Widget, IDataObject
 		where TCallback : Widget.ICallback
 	{
 		nint _changeCount;
@@ -139,7 +150,7 @@ namespace Eto.Mac.Forms
 			if (availableType != null)
 			{
 				var data = Control.GetDataForType(availableType);
-				if (data == null)
+				if (data == null || data.Bytes == IntPtr.Zero)
 					return null;
 				var bytes = new byte[data.Length];
 				Marshal.Copy(data.Bytes, bytes, 0, (int)data.Length);
@@ -148,7 +159,10 @@ namespace Eto.Mac.Forms
 			return null;
 		}
 
-		public string GetString(string type) => Control.GetStringForType(type);
+		public string GetString(string type)
+		{
+			return Control.GetStringForType(type);
+		}
 
 
 		public string[] Types => Control.Types;
@@ -218,5 +232,30 @@ namespace Eto.Mac.Forms
 		{
 			return Control.GetAvailableTypeFromArray(new[] { type }) != null;
 		}
+
+		public bool TryGetObject(string type, out object value)
+		{
+			if (type == NSPasteboard.NSPasteboardTypeColor)
+			{
+				value = NSColor.FromPasteboard(Control)?.ToEto();
+				return true;
+			}
+			value = null;
+			return false;
+		}
+
+		public bool TrySetObject(object value, string type)
+		{
+			if (value is Color color && type == NSPasteboard.NSPasteboardTypeColor)
+			{
+				Control.WriteObjects(new[] { color.ToNSUI() });
+				return true;
+			}
+			return false;
+		}
+
+		public void SetObject(object value, string type) => Widget.SetObject(value, type);
+
+		public T GetObject<T>(string type) => Widget.GetObject<T>(type);
 	}
 }

@@ -6,7 +6,7 @@ Eto.Forms
 [![forums](https://img.shields.io/badge/join-the%20forums-yellowgreen.svg)](http://groups.google.com/group/eto-forms)
 [![Gitter](https://img.shields.io/gitter/room/nwjs/nw.js.svg)](https://gitter.im/picoe/Eto)
 [![wiki](https://img.shields.io/badge/browse-the%20wiki-orange.svg)](https://github.com/picoe/Eto/wiki)
-[![NuGet](http://img.shields.io/nuget/v/Eto.Forms.svg?style=flat)](https://www.nuget.org/packages/Eto.Forms.Sample/)
+[![NuGet](http://img.shields.io/nuget/v/Eto.Forms.svg?style=flat)](https://www.nuget.org/packages/Eto.Forms/)
 [![MyGet](http://img.shields.io/myget/eto/vpre/Eto.Forms.svg?style=flat&label=MyGet)](https://www.myget.org/gallery/eto)
 
 Description
@@ -77,12 +77,13 @@ Applications
 * [MonoGame Pipeline Tool](https://github.com/MonoGame/MonoGame) - Content manager for MonoGame
 * [Manager](http://www.manager.io) - Accounting Software
 * [PabloDraw](http://picoe.ca/products/pablodraw/alpha) - Character based drawing application
-* [JabbR.Desktop](https://github.com/JabbR/JabbR.Desktop) - JabbR client
 * [Notedown](https://github.com/cwensley/Notedown) - Note taking application
 * [Eto.Test](https://github.com/picoe/Eto/tree/master/test/Eto.Test) - Application to test the functionality of each widget
 * [DWSIM](https://github.com/DanWBR/dwsim5) - Chemical Process Simulator
 * [Termission](https://github.com/junian/termission) - Cross-platform Serial/TCP Terminal with Scriptable Auto-Response
 * [Visual SEO Studio](https://visual-seo.com/) - Technical SEO Auditing Tool
+* [RegexTestBench](https://github.com/CommonLoon102/RegexTestBench) - Cross-platform regex testing tool in .NET Core
+* [RegexFileSearcher](https://github.com/CommonLoon102/RegexFileSearcher) - Cross-platform regex file searching tool in .NET Core
 
 Assemblies
 ----------
@@ -106,7 +107,6 @@ Your project only needs to reference Eto.dll, and include the corresponding plat
 Currently supported targets
 ---------------------------
 
-* iOS using Xamarin.iOS
 * OS X: MonoMac or Xamarin.Mac
 * Linux: GTK# 2 or 3
 * Windows: Windows Forms (using GDI or Direct2D) or WPF
@@ -114,7 +114,8 @@ Currently supported targets
 Under development
 -----------------
 
-These platforms are currently in development. Any eager bodies willing to help feel free to do so!
+These platforms are currently incomplete or in development. Any eager bodies willing to help feel free to do so!
 
+* iOS using Xamarin.iOS
 * Android using Xamarin.Android (Eto.Android)
 * Windows 8.x and Windows Phone (Eto.WinRT)

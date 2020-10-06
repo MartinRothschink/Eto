@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
-    <TargetFrameworks>netcoreapp3.1;net461</TargetFrameworks>
+    <TargetFrameworks>netcoreapp3.1;net472</TargetFrameworks>
     <DefineConstants>$(DefineConstants);CAIRO;GTK3</DefineConstants>
     <TreatWarningsAsErrors Condition="$(Configuration) == 'Release'">true</TreatWarningsAsErrors>
   </PropertyGroup>
@@ -11,12 +11,15 @@
     <StartAction>Project</StartAction>
     <ExternalConsole>false</ExternalConsole>
     <EnvironmentVariables>
-      <Variable name="DYLD_FALLBACK_LIBRARY_PATH" value="/usr/local/lib" />
+      <Variable name="LD_LIBRARY_PATH" value="/usr/local/lib:/usr/lib" />
     </EnvironmentVariables>
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\src\Eto.Gtk\Eto.Gtk.csproj" />
     <ProjectReference Include="..\..\src\Eto\Eto.csproj" />
     <ProjectReference Include="..\Eto.Test\Eto.Test.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.0" PrivateAssets="all" />
   </ItemGroup>
 </Project>

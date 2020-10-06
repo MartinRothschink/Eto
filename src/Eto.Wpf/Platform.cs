@@ -168,6 +168,7 @@ namespace Eto.Wpf
 			p.Add<Dialog.IHandler>(() => new DialogHandler());
 			p.Add<FontDialog.IHandler>(() => new FontDialogHandler());
 			p.Add<Form.IHandler>(() => new FormHandler());
+			p.Add<FloatingForm.IHandler>(() => new FloatingFormHandler());
 			p.Add<MessageBox.IHandler>(() => new MessageBoxHandler());
 			p.Add<OpenFileDialog.IHandler>(() => new OpenFileDialogHandler());
 			p.Add<OpenWithDialog.IHandler>(() => new OpenWithDialogHandler());
@@ -186,7 +187,9 @@ namespace Eto.Wpf
 			p.Add<TrayIndicator.IHandler>(() => new TrayIndicatorHandler());
 			p.Add<Notification.IHandler>(() => new NotificationHandler());
 			p.Add<DataObject.IHandler>(() => new DataObjectHandler());
-
+			p.Add<DataFormats.IHandler>(() => new DataFormatsHandler());
+			p.Add<Taskbar.IHandler>(() => new TaskbarHandler());
+			
 			// IO
 			p.Add<SystemIcons.IHandler>(() => new SystemIconsHandler());
 			

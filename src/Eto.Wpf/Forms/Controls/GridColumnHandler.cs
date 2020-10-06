@@ -9,7 +9,8 @@ namespace Eto.Wpf.Forms.Controls
 	{
 		Grid Widget { get; }
 		bool Loaded { get; }
-		sw.FrameworkElement SetupCell (IGridColumnHandler column, sw.FrameworkElement defaultContent);
+		bool DisableAutoScrollToSelection { get; }
+		sw.FrameworkElement SetupCell (IGridColumnHandler column, sw.FrameworkElement defaultContent, swc.DataGridCell cell);
 		void FormatCell (IGridColumnHandler column, ICellHandler cell, sw.FrameworkElement element, swc.DataGridCell gridcell, object dataItem);
 		void CellEdited(int row, swc.DataGridColumn dataGridColumn, object dataItem);
 	}
@@ -118,9 +119,9 @@ namespace Eto.Wpf.Forms.Controls
 			GridHandler = gridHandler;
 		}
 
-		public sw.FrameworkElement SetupCell (ICellHandler cell, sw.FrameworkElement defaultContent)
+		public sw.FrameworkElement SetupCell (ICellHandler handler, sw.FrameworkElement defaultContent, swc.DataGridCell cell)
 		{
-			return GridHandler != null ? GridHandler.SetupCell(this, defaultContent) : defaultContent;
+			return GridHandler != null ? GridHandler.SetupCell(this, defaultContent, cell) : defaultContent;
 		}
 
 		public void FormatCell (ICellHandler cell, sw.FrameworkElement element, swc.DataGridCell gridcell, object dataItem)

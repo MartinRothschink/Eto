@@ -53,6 +53,24 @@ namespace Eto.Wpf.Forms.Controls
 			}
 		}
 
+		public EtoDataGrid()
+		{
+			Loaded += EtoDataGrid_Loaded;
+		}
+
+		private void EtoDataGrid_Loaded(object sender, sw.RoutedEventArgs e)
+		{
+			var scp = this.FindChild<swc.ScrollContentPresenter>();
+			if (scp != null) scp.RequestBringIntoView += OnRequestBringIntoView;
+		}
+
+		private void OnRequestBringIntoView(object sender, sw.RequestBringIntoViewEventArgs e)
+		{
+			var h = Handler as IGridHandler;
+			if (h == null)
+				return;
+			e.Handled = h.DisableAutoScrollToSelection;
+		}
 	}
 
 	class GridDragRowState
@@ -130,6 +148,7 @@ namespace Eto.Wpf.Forms.Controls
 				GridLinesVisibility = swc.DataGridGridLinesVisibility.None,
 				Background = sw.SystemColors.WindowBrush
 			};
+			Control.MouseUp += HandleOutsideMouseUp;
 		}
 
 		protected ColumnCollection Columns { get; private set; }
@@ -161,7 +180,15 @@ namespace Eto.Wpf.Forms.Controls
 					// handled by each cell after value is set with the CellEdited method
 					break;
 				case Grid.CellClickEvent:
-					Control.PreviewMouseDown += (sender, e) => Callback.OnCellClick(Widget, CreateCellMouseArgs(e.OriginalSource, e));
+					Control.PreviewMouseDown += (sender, e) => {
+						var hitTestResult = swm.VisualTreeHelper.HitTest(Control, e.GetPosition(Control))?.VisualHit;
+						if (!TreeTogglePanel.IsOverExpander(hitTestResult))
+						{
+							var args = CreateCellMouseArgs(e.OriginalSource, e);
+							Callback.OnCellClick(Widget, args);
+							e.Handled = args.Handled;
+						}
+					};
 					break;
 				case Grid.CellDoubleClickEvent:
 					Control.MouseDoubleClick += (sender, e) => Callback.OnCellDoubleClick(Widget, CreateCellMouseArgs(e.OriginalSource, e));
@@ -321,7 +348,7 @@ namespace Eto.Wpf.Forms.Controls
 
 			var hitTestResult = swm.VisualTreeHelper.HitTest(Control, e.GetPosition(Control))?.VisualHit;
 			var cell = hitTestResult?.GetVisualParent<swc.DataGridCell>();
-			var row = cell?.GetVisualParent<swc.DataGridRow>();
+			var row = hitTestResult?.GetVisualParent<swc.DataGridRow>();
 
 			var info = MultipleSelectionInfo;
 			if (!e.Handled && info != null)
@@ -334,7 +361,9 @@ namespace Eto.Wpf.Forms.Controls
 					if (cell != null)
 					{
 						var args = CreateCellMouseArgs(cell, e);
-						Callback.OnCellClick(Widget, args);
+						if (!TreeTogglePanel.IsOverExpander(hitTestResult))
+							Callback.OnCellClick(Widget, args);
+
 						if (!args.Handled)
 						{
 							if (!hadMultipleSelection && ReferenceEquals(info.Cell, cell))
@@ -372,21 +401,7 @@ namespace Eto.Wpf.Forms.Controls
 				}
 
 				MultipleSelectionInfo = null;
-			}
-			if (!e.Handled && AllowEmptySelection)
-			{
-				if (hitTestResult != null
-					&& (
-						hitTestResult is swc.ScrollViewer // below rows
-						|| swm.VisualTreeHelper.GetParent(hitTestResult) is swc.DataGridRow // right of rows
-						)
-					)
-				{
-					UnselectAll();
-					e.Handled = true;
-				}
-
-			}
+			}			
 
 			if (!e.Handled && cell != null && TreeTogglePanel.IsOverContent(hitTestResult) != false)
 			{
@@ -395,6 +410,29 @@ namespace Eto.Wpf.Forms.Controls
 				var columnHandler = args.GridColumn?.Handler as GridColumnHandler;
 				columnHandler?.OnMouseUp(args, hitTestResult, cell);
 				e.Handled = args.Handled;
+			}
+		}
+
+
+		private void HandleOutsideMouseUp(object sender, swi.MouseButtonEventArgs e)
+		{
+			var hitTestResult = swm.VisualTreeHelper.HitTest(Control, e.GetPosition(Control))?.VisualHit;
+			if (!e.Handled)
+			{
+				if (hitTestResult != null
+					&& (
+						hitTestResult is swc.ScrollViewer // below rows
+						|| swm.VisualTreeHelper.GetParent(hitTestResult) is swc.DataGridRow // right of rows
+						)
+					)
+				{
+					CommitEdit();
+					if (AllowEmptySelection)
+					{
+						UnselectAll();
+						e.Handled = true;
+					}
+				}
 			}
 		}
 
@@ -438,9 +476,9 @@ namespace Eto.Wpf.Forms.Controls
 					columnHandler?.OnMouseDown(args, hitTestResult, cell);
 					e.Handled = args.Handled;
 
-					if (!args.Handled && TreeTogglePanel.IsOverContent(hitTestResult) != true)
+					if (!args.Handled && TreeTogglePanel.IsOverContent(hitTestResult) == false)
 					{
-						// clicked outside of content area, so we should commit editing.
+						// clicked outside of content area in TreeGridView, so we should commit editing.
 						CommitEdit();
 						e.Handled = true;
 					}
@@ -553,10 +591,15 @@ namespace Eto.Wpf.Forms.Controls
 
 		public void BeginEdit(int row, int column)
 		{
-			Control.UnselectAll();
+			CommitEdit();
 			//sometimes couldn't focus to cell, so use ScrollIntoView
 			Control.ScrollIntoView(Control.Items[row]);
-			//set current cell
+			//set current cell and select its row.
+			if (!SelectedRows.Contains(row))
+			{
+				Control.UnselectAll();
+				Control.SelectedIndex = row;
+			}
 			Control.CurrentCell = new swc.DataGridCellInfo(Control.Items[row], Control.Columns[column]);	
 			Control.Focus();
 			Control.BeginEdit();
@@ -566,7 +609,7 @@ namespace Eto.Wpf.Forms.Controls
 
 		public bool CancelEdit() => Control.CancelEdit();
 
-		public virtual sw.FrameworkElement SetupCell(IGridColumnHandler column, sw.FrameworkElement defaultContent)
+		public virtual sw.FrameworkElement SetupCell(IGridColumnHandler column, sw.FrameworkElement defaultContent, swc.DataGridCell cell)
 		{
 			return defaultContent;
 		}
@@ -789,6 +832,7 @@ namespace Eto.Wpf.Forms.Controls
 			get => Widget.Properties.Get<bool>(GridHandler.AllowEmptySelection_Key, true);
 			set => Widget.Properties.Set(GridHandler.AllowEmptySelection_Key, value, true);
 		}
+		public bool DisableAutoScrollToSelection { get; set; }
 
 		protected void EnsureSelection()
 		{
